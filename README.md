@@ -35,11 +35,14 @@ print(f"Hello {name}, you're {age} years old!")
 
 - 🌐 **CLI → Web Instantly** - No backend/frontend coding needed
 - 📝 **Full `input()` Support** - Interactive forms automatically generated
-- 🎨 **Beautiful UI** - Professional interface out of the box
+- 🎨 **Beautiful Split-Screen UI** - Input on left, output on right (desktop)
 - 🔄 **Live Code Updates** - Edit script, refresh browser, see changes
-- 📱 **Mobile Friendly** - Works perfectly on phones and tablets
-- 🔒 **Isolated Execution** - Clean slate on every run
+- 📱 **Mobile Friendly** - Responsive stacked layout on mobile devices
+- 🔒 **Isolated Execution** - Clean slate on every run with module cache clearing
 - ⚡ **Zero Configuration** - Just run and go
+- 📦 **Module Import Support** - Import from local files in your project
+- 📜 **Auto-Scroll Output** - Output automatically scrolls to latest content
+- 💾 **Server-Side Sessions** - No cookie size limits, handles large outputs
 
 ---
 
@@ -170,6 +173,19 @@ print(f"Max: {max(numbers)}")
 
 ## 🎨 Features in Detail
 
+### ✅ Split-Screen Layout (Desktop)
+
+WebPy v1.0 features a modern split-screen interface:
+
+**Desktop (>768px):**
+- 📌 Left side (35%): Input form with prompts
+- 📌 Right side (65%): Output display (400px height, auto-scroll)
+- 📌 Header and status bar: Full-width above both columns
+
+**Mobile (≤768px):**
+- 📱 Stacked vertically: Input form on top, output below
+- 📱 Fixed 400px output height with scroll on all devices
+
 ### ✅ Print Statement Capture
 
 All `print()` output is beautifully formatted:
@@ -184,7 +200,8 @@ Displays with:
 - 🎨 Monospace font
 - 🌙 Dark theme output area
 - 📱 Responsive layout
-- ✨ Syntax-aware formatting
+- 📜 Auto-scroll to latest output
+- 📏 Fixed height with scrollbar
 
 ### ✅ Interactive Input Forms
 
@@ -195,25 +212,58 @@ email = input("Your email: ")
 
 Automatically generates:
 - 📝 Labeled input fields
-- ➡️ Submit button (mobile-friendly)
+- ➡️ Submit button (full-width on mobile)
 - ⌨️ Enter key support (desktop)
-- ✅ Shows previous inputs
-- 📱 Fully responsive
+- 📱 Fully responsive design
+- 🔄 Clean form layout
+
+### ✅ Module Import Support
+
+WebPy automatically enables importing from local files:
+
+```python
+# main.py
+from my_module import my_function
+from Game import Game
+
+# Works perfectly - no configuration needed!
+game = Game()
+result = my_function()
+```
+
+Features:
+- 📦 Auto-adds project directory to Python path
+- 🔄 Clears module cache for fresh execution
+- ✨ Supports complex project structures
+- 🎯 Works with classes, functions, and variables
 
 ### ✅ One Input at a Time
 
-Instead of overwhelming users with all inputs at once:
+Clean, focused input experience:
 
 ```
 Step 1: What's your name? [____] → Submit
        ↓
-Step 2: ✅ Name: John
-        How old are you? [____] → Submit
+Step 2: How old are you? [____] → Submit
        ↓
-Step 3: ✅ Name: John
-        ✅ Age: 25
-        [Final Output]
+Step 3: [Final Output with all results]
 ```
+
+### ✅ Session Management
+
+Server-side session storage prevents issues:
+- 💾 No browser cookie size limits (4KB)
+- 📊 Handles large outputs (up to 100KB)
+- 🎮 Perfect for games and complex applications
+- 🔒 Sessions stored in `.sessions/` directory
+
+### ✅ Smart Exception Handling
+
+WebPy uses `BaseException` for input requests to avoid conflicts:
+- 🎯 Works with games that use `try/except` blocks
+- 🔄 Doesn't get caught by `except Exception` handlers
+- ✨ Ensures input prompts always reach the user
+- 🎮 Perfect for tic-tac-toe, RPGs, and interactive apps
 
 
 ## 🔧 Advanced Usage
@@ -296,14 +346,19 @@ gunicorn -w 4 -b 0.0.0.0:8000 webpy.server:app
 
 ```
 webpy/
-├── webpy_v2_mobile.py       # Main application (mobile-friendly)
-├── requirements.txt         # Dependencies (just Flask!)
-├── README.md               # This file
-├── examples/               # Example scripts
-│   ├── calculator.py
-│   ├── quiz.py
-│   └── analyzer.py
-└── main.py           # Your Python script goes here
+├── webpy/                  # Package directory
+│   ├── __init__.py
+│   ├── __main__.py        # Entry point (python -m webpy)
+│   ├── server.py          # Main Flask application
+│   ├── requirements.txt   # Dependencies
+│   ├── README.md         # This file
+│   ├── LICENSE
+│   └── .sessions/        # Server-side session storage (auto-created)
+├── main.py               # Your Python script goes here
+└── examples/             # Example scripts (optional)
+    ├── calculator.py
+    ├── quiz.py
+    └── analyzer.py
 ```
 
 ---
@@ -336,21 +391,22 @@ webpy/
 
 ### File Setup
 
-Place your Python script as `main.py` in the same directory:
+Place your Python script as `main.py` in the project root:
 
 ```
 webpy/
-├── webpy_v2_mobile.py
-└── main.py  ← Your script
+├── webpy/           # Package directory
+│   └── server.py   # Don't edit this
+└── main.py         # ← Your script goes here
 ```
 
 ### Customization
 
-Edit `webpy_v2_mobile.py` to customize:
-- UI colors and styling
-- Server port and host
-- Error messages
-- Timeout settings
+Edit `webpy/server.py` to customize:
+- UI colors and styling (HTML_TEMPLATE section)
+- Server port and host (run_server function)
+- Output size limits (MAX_OUTPUT_SIZE variable)
+- Session configuration
 
 ---
 
@@ -362,7 +418,7 @@ Edit `webpy_v2_mobile.py` to customize:
 Error: File "main.py" not found
 ```
 
-**Solution:** Create `main.py` in the same directory as `webpy_v2_mobile.py`
+**Solution:** Create `main.py` in the project root directory (same level as `webpy/` folder)
 
 ### Port Already in Use
 
@@ -370,7 +426,7 @@ Error: File "main.py" not found
 Error: Address already in use
 ```
 
-**Solution:** Use a different port: `--port 8080`
+**Solution:** Use a different port: `python -m webpy --port 8080`
 
 ### Import Errors
 
@@ -380,9 +436,21 @@ ModuleNotFoundError: No module named 'pandas'
 
 **Solution:** Install missing packages: `pip install pandas`
 
-### Mobile Submit Button Not Working
+### Session Storage Warnings
 
-**Solution:** Make sure you're using `webpy_v2_mobile.py` (not older versions)
+```
+WARNING: Exception raised while handling cache file
+```
+
+**Solution:** This is normal - WebPy manages sessions automatically. The `.sessions/` directory is auto-created and maintained.
+
+### Large Output Truncated
+
+```
+... [Output truncated - exceeded 100000 bytes]
+```
+
+**Solution:** Output is limited to 100KB to prevent session issues. Modify `MAX_OUTPUT_SIZE` in `server.py` if needed.
 
 ---
 
@@ -412,25 +480,31 @@ If deploying publicly, implement:
 
 ## 🛣️ Roadmap
 
-### Current Version (v2.0) ✅
+### Current Version (v1.0) ✅
 - ✅ Print statement capture
 - ✅ Interactive input() support
-- ✅ Mobile-friendly interface
+- ✅ Split-screen desktop layout
+- ✅ Mobile-responsive stacked layout
 - ✅ One input at a time
-- ✅ Clean slate execution
-- ✅ Beautiful UI
+- ✅ Clean slate execution with module cache clearing
+- ✅ Beautiful modern UI
+- ✅ Module import support
+- ✅ Server-side session storage
+- ✅ Auto-scroll output
+- ✅ Fixed-height output with scrollbar
+- ✅ 100KB output size limit
 
 ### Planned Features
 - [ ] In-browser code editor
 - [ ] File upload support
-- [ ] Multiple script support
+- [ ] Multiple script support (switch between files)
 - [ ] Execution history
-- [ ] Download output
+- [ ] Download output as text file
 - [ ] Dark/light theme toggle
-- [ ] Syntax highlighting
-- [ ] Auto-refresh option
-- [ ] Code persistence
-- [ ] User sessions
+- [ ] Syntax highlighting in output
+- [ ] User authentication
+- [ ] Execution timeouts
+- [ ] Rate limiting
 
 ---
 
@@ -445,6 +519,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - Built with [Flask](https://flask.palletsprojects.com/) - Micro web framework
+- Sessions powered by [Flask-Session](https://flask-session.readthedocs.io/) - Server-side session support
+- Production server by [Waitress](https://docs.pylonsproject.org/projects/waitress/) - Pure Python WSGI server
 - Inspired by the need to share Python scripts easily
 - Made for learners, teachers, and developers worldwide
 
