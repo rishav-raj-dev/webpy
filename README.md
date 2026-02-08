@@ -49,7 +49,7 @@ print(f"Hello {name}, you're {age} years old!")
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/webpy.git
+git clone https://github.com/rishav-raj-dev/webpy.git
 cd webpy
 
 # Install dependencies
@@ -72,7 +72,7 @@ print("\n✅ Thanks for using WebPy!")
 ### Run It
 
 ```bash
-python webpy_v2_mobile.py
+python -m webpy
 ```
 
 ### Open Browser
@@ -122,7 +122,7 @@ elif op == "/":
 print(f"\n✅ Result: {n1} {op} {n2} = {result}")
 ```
 
-Run: `python webpy_v2_mobile.py`  
+Run: `python -m webpy`  
 **Result:** Professional calculator web app! 🧮
 
 ### Example 2: Quiz App
@@ -215,45 +215,79 @@ Step 3: ✅ Name: John
         [Final Output]
 ```
 
-Natural, conversational flow! 💬
-
-### ✅ Mobile Optimized
-
-- 📱 Touch-friendly buttons
-- 📐 Responsive layout
-- 🔤 Proper input sizing
-- 👆 No accidental clicks
-- ⚡ Fast on mobile
-
----
 
 ## 🔧 Advanced Usage
 
-### Custom Port & Host
+### Command Line Options
+
+WebPy supports several command-line flags to customize how the server runs:
 
 ```bash
-# Run on different port
-python webpy_v2_mobile.py --port 8080
+# Basic usage (default: localhost:5000, debug mode on)
+python -m webpy
 
-# Allow network access (share with others)
-python webpy_v2_mobile.py --host 0.0.0.0 --port 5000
+# Custom port
+python -m webpy --port 8080
+
+# Custom host (allow external connections)
+python -m webpy --host 0.0.0.0
+
+# Disable debug mode
+python -m webpy --no-debug
+
+# Production mode (uses Waitress server instead of Flask dev server)
+python -m webpy --production
+
+# Combine options
+python -m webpy --host 0.0.0.0 --port 8080 --production
+```
+
+#### Available Flags:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--host` | `127.0.0.1` | Host to bind to. Use `0.0.0.0` to allow external connections |
+| `--port` | `5000` | Port to bind to (any available port number) |
+| `--no-debug` | Debug on | Disable Flask debug mode (auto-reload, detailed errors) |
+| `--production` | Off | Run in production mode using Waitress WSGI server |
+
+**Examples:**
+
+```bash
+# Development on different port
+python -m webpy --port 3000
+
+# Share with your team on local network
+python -m webpy --host 0.0.0.0 --port 5000
+
+# Production deployment
+python -m webpy --host 0.0.0.0 --port 8000 --production --no-debug
 ```
 
 ### Share on Local Network
 
-1. Start with: `python webpy_v2_mobile.py --host 0.0.0.0`
+1. Start with: `python -m webpy --host 0.0.0.0`
 2. Find your IP: `ifconfig` (Mac/Linux) or `ipconfig` (Windows)
 3. Share link: `http://YOUR_IP:5000`
 4. Anyone on your network can access! 🌐
 
 ### Deploy to Production
 
+**Option 1: Use built-in production mode (Recommended)**
+
+```bash
+# WebPy includes Waitress for production
+python -m webpy --host 0.0.0.0 --port 8000 --production --no-debug
+```
+
+**Option 2: Use Gunicorn (Linux/Mac)**
+
 ```bash
 # Install gunicorn
 pip install gunicorn
 
-# Run in production
-gunicorn -w 4 -b 0.0.0.0:8000 webpy_v2_mobile:app
+# Run with gunicorn
+gunicorn -w 4 -b 0.0.0.0:8000 webpy.server:app
 ```
 
 ---
@@ -418,8 +452,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Support & Contact
 
-- 🐛 **Found a bug?** [Open an issue](https://github.com/yourusername/webpy/issues)
-- 💡 **Have an idea?** [Start a discussion](https://github.com/yourusername/webpy/discussions)
+- 🐛 **Found a bug?** [Open an issue](https://github.com/rishav-raj-dev/webpy/issues)
+- 💡 **Have an idea?** [Start a discussion](https://github.com/rishav-raj-dev/webpy/discussions)
 - ⭐ **Like the project?** Give it a star!
 
 ---
@@ -446,11 +480,11 @@ If you find WebPy useful, please ⭐ star the repository! It helps others discov
 ## 🚀 Get Started Now!
 
 ```bash
-git clone https://github.com/yourusername/webpy.git
+git clone https://github.com/rishav-raj-dev/webpy.git
 cd webpy
 pip install -r requirements.txt
 echo 'print("Hello WebPy!")' > main.py
-python webpy_v2_mobile.py
+python -m webpy
 ```
 
 **Visit `http://localhost:5000` and see your script running! 🎉**
@@ -463,6 +497,6 @@ python webpy_v2_mobile.py
 
 **Stop building backends. Start building features.** 🐍✨
 
-[⭐ Star](https://github.com/yourusername/webpy) • [🐛 Report Bug](https://github.com/yourusername/webpy/issues) • [💡 Request Feature](https://github.com/yourusername/webpy/issues)
+[⭐ Star](https://github.com/rishav-raj-dev/webpy) • [🐛 Report Bug](https://github.com/rishav-raj-dev/webpy/issues) • [💡 Request Feature](https://github.com/rishav-raj-dev/webpy/issues)
 
 </div>
