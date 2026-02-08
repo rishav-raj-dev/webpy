@@ -61,7 +61,7 @@ HTML_TEMPLATE = """
             min-height: 100vh;
             padding: 20px;
         }
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         .header {
             background: white;
             padding: 30px;
@@ -92,44 +92,26 @@ HTML_TEMPLATE = """
             flex-wrap: wrap;
             gap: 10px;
         }
+        
+        /* Desktop split layout */
+        .content-wrapper {
+            display: flex;
+            gap: 0;
+            min-height: 400px;
+        }
+        
         .input-section {
             background: white;
             padding: 25px 30px;
             border-left: 4px solid #FF9800;
+            flex: 0 0 35%;
+            overflow-y: auto;
+            max-height: 400px;
         }
         .input-section h3 { 
             color: #FF9800; 
             margin-bottom: 15px; 
             font-size: 16px; 
-        }
-        .previous-inputs {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 5px;
-            border-left: 3px solid #4CAF50;
-        }
-        .previous-inputs h4 {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        .previous-input-item {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 8px;
-            font-size: 14px;
-            flex-wrap: wrap;
-        }
-        .previous-input-label {
-            font-weight: 600;
-            color: #333;
-            min-width: 150px;
-        }
-        .previous-input-value {
-            color: #4CAF50;
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
         }
         .input-group { 
             display: flex; 
@@ -145,9 +127,10 @@ HTML_TEMPLATE = """
             display: flex;
             gap: 10px;
             align-items: stretch;
+            flex-direction: column;
         }
         .input-group input {
-            flex: 1;
+            width: 100%;
             padding: 14px;
             border: 2px solid #ddd;
             border-radius: 5px;
@@ -171,7 +154,7 @@ HTML_TEMPLATE = """
             font-weight: 600;
             transition: background 0.3s;
             white-space: nowrap;
-            min-width: 100px;
+            width: 100%;
         }
         .submit-btn:hover { 
             background: #5568d3; 
@@ -179,24 +162,30 @@ HTML_TEMPLATE = """
         .submit-btn:active {
             transform: scale(0.98);
         }
-        .input-hint {
-            font-size: 12px;
-            color: #888;
-            font-style: italic;
-        }
+        
         .output-container {
             background: #1e1e1e;
             padding: 30px;
-            border-radius: 0 0 10px 10px;
+            border-radius: 0 0 10px 0;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            min-height: 300px;
+            flex: 0 0 65%;
+            height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
+        
         .output-title {
             color: #4CAF50;
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 15px;
             font-family: 'Courier New', monospace;
+            position: sticky;
+            top: 0;
+            background: #1e1e1e;
+            padding-bottom: 10px;
+            z-index: 10;
         }
         .output {
             color: #f0f0f0;
@@ -205,6 +194,7 @@ HTML_TEMPLATE = """
             line-height: 1.6;
             white-space: pre-wrap;
             word-wrap: break-word;
+            flex: 1;
         }
         .error {
             color: #ff6b6b;
@@ -240,16 +230,44 @@ HTML_TEMPLATE = """
         .status.waiting { background: #fff3cd; color: #856404; }
         .empty-output { color: #888; font-style: italic; }
         
+        /* When no input needed, output takes full width */
+        .output-container.full-width {
+            flex: 1;
+            border-radius: 0 0 10px 10px;
+        }
+        
         /* Mobile-specific styles */
         @media (max-width: 768px) {
             body { padding: 10px; }
             .header h1 { font-size: 24px; }
             .header { padding: 20px; }
-            .input-section { padding: 20px; }
-            .output-container { padding: 20px; }
+            .container { max-width: 100%; }
+            
+            /* Stack vertically on mobile */
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .input-section {
+                flex: none;
+                max-height: none;
+                padding: 20px;
+                border-radius: 0;
+            }
+            
+            .output-container {
+                flex: none;
+                height: 400px;
+                border-radius: 0 0 10px 10px;
+                padding: 20px;
+            }
+            
+            .output-container.full-width {
+                border-radius: 0 0 10px 10px;
+            }
+            
             .input-row {
                 flex-direction: column;
-                gap: 10px;
             }
             .submit-btn {
                 width: 100%;
@@ -259,13 +277,6 @@ HTML_TEMPLATE = """
             .input-group input {
                 font-size: 16px;
                 padding: 12px;
-            }
-            .previous-input-item {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .previous-input-label {
-                min-width: auto;
             }
         }
     </style>
@@ -288,47 +299,58 @@ HTML_TEMPLATE = """
             </div>
         </div>
         
-        {% if needs_input %}
-        <form method="POST" action="/submit" class="input-section">
-            <h3>📝 Input Required</h3>
-            <div class="input-group">
-                <label for="current_input">{{ current_prompt if current_prompt else 'Enter value' }}</label>
-                <div class="input-row">
-                    <input type="text" 
-                           id="current_input" 
-                           name="current_input" 
-                           placeholder="Type your answer..." 
-                           required
-                           autofocus
-                           value="{{ last_value }}">
-                    <button type="submit" class="submit-btn">→ Submit</button>
+        <div class="content-wrapper">
+            {% if needs_input %}
+            <form method="POST" action="/submit" class="input-section">
+                <h3>📝 Input Required</h3>
+                <div class="input-group">
+                    <label for="current_input">{{ current_prompt if current_prompt else 'Enter value' }}</label>
+                    <div class="input-row">
+                        <input type="text" 
+                               id="current_input" 
+                               name="current_input" 
+                               placeholder="Type your answer..." 
+                               required
+                               autofocus
+                               value="{{ last_value }}">
+                        <button type="submit" class="submit-btn">→ Submit</button>
+                    </div>
                 </div>
-            </div>
-        </form>
-        {% endif %}
-        
-        <div class="output-container">
-            <div class="output-title">>>> OUTPUT</div>
-            {% if output %}
-                <div class="output">{{ output }}</div>
-            {% else %}
-                <div class="output empty-output">
-                    {% if needs_input %}
-                        Waiting for input...
-                    {% else %}
-                        No output. Add print() statements to your code.
-                    {% endif %}
-                </div>
+            </form>
             {% endif %}
             
-            {% if error %}
-                <div class="error">
-                    <strong>❌ Error:</strong><br>
-                    {{ error }}
-                </div>
-            {% endif %}
+            <div class="output-container{% if not needs_input %} full-width{% endif %}">
+                <div class="output-title">>>> OUTPUT</div>
+                {% if output %}
+                    <div class="output">{{ output }}</div>
+                {% else %}
+                    <div class="output empty-output">
+                        {% if needs_input %}
+                            Waiting for input...
+                        {% else %}
+                            No output. Add print() statements to your code.
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                {% if error %}
+                    <div class="error">
+                        <strong>❌ Error:</strong><br>
+                        {{ error }}
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
+    <script>
+        // Auto-scroll output to bottom on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const outputContainer = document.querySelector('.output-container');
+            if (outputContainer) {
+                outputContainer.scrollTop = outputContainer.scrollHeight;
+            }
+        });
+    </script>
 </body>
 </html>
 """
@@ -345,6 +367,10 @@ class InputCapture:
         """Mock input function"""
         self.prompts.append(prompt)
         
+        # Detect infinite loops - if same prompt asked too many times
+        if len(self.prompts) > 100:
+            raise Exception(f"Too many input() calls ({len(self.prompts)}). Possible infinite loop in your code.")
+        
         if self.input_index < len(self.provided_inputs):
             value = self.provided_inputs[self.input_index]
             self.input_index += 1
@@ -354,8 +380,8 @@ class InputCapture:
             raise NeedsInputException("Code requires user input")
 
 
-class NeedsInputException(Exception):
-    """Raised when code needs input from user"""
+class NeedsInputException(BaseException):
+    """Raised when code needs input from user - inherits from BaseException to bypass except Exception handlers"""
     pass
 
 
@@ -385,6 +411,19 @@ def execute_user_code(file_path, provided_inputs=None):
             sys.path.insert(0, file_dir)
             sys_path_modified = True
         
+        # Remove cached module to ensure fresh execution each time
+        if "user_code" in sys.modules:
+            del sys.modules["user_code"]
+        
+        # Also remove any imported user modules (from the same directory)
+        modules_to_remove = [name for name, mod in sys.modules.items() 
+                           if mod is not None and hasattr(mod, '__file__') 
+                           and mod.__file__ is not None 
+                           and file_dir in mod.__file__]
+        for mod_name in modules_to_remove:
+            if mod_name != "__main__":
+                del sys.modules[mod_name]
+        
         spec = importlib.util.spec_from_file_location("user_code", file_path)
         if spec and spec.loader:
             module = importlib.util.module_from_spec(spec)
@@ -409,11 +448,11 @@ def execute_user_code(file_path, provided_inputs=None):
         if sys_path_modified and file_dir in sys.path:
             sys.path.remove(file_dir)
     
-    # Reverse output lines for descending time order (most recent first)
+    # Get output and limit size to prevent session storage issues
     output_text = output.getvalue()
-    if output_text:
-        lines = output_text.splitlines()
-        output_text = '\n'.join(reversed(lines))
+    MAX_OUTPUT_SIZE = 100000  # 100KB limit
+    if len(output_text) > MAX_OUTPUT_SIZE:
+        output_text = output_text[:MAX_OUTPUT_SIZE] + f"\n\n... [Output truncated - exceeded {MAX_OUTPUT_SIZE} bytes]"
     
     return output_text, error, needs_input, input_prompts
 
@@ -472,45 +511,63 @@ def index():
 @app.route('/submit', methods=['POST'])
 def submit():
     """Handle input submission"""
-    user_code_path = Path('main.py')
-    
-    current_value = request.form.get('current_input', '')
-    
-    provided_inputs = session.get('provided_inputs', [])
-    all_prompts = session.get('all_prompts', [])
-    
-    provided_inputs.append(current_value)
-    
-    output, error, needs_input, new_prompts = execute_user_code(user_code_path, provided_inputs)
-    
-    if needs_input:
-        session['provided_inputs'] = provided_inputs
-        session['all_prompts'] = new_prompts
+    try:
+        user_code_path = Path('main.py')
         
-        previous_inputs_display = list(zip(all_prompts[:len(provided_inputs)], provided_inputs))
+        current_value = request.form.get('current_input', '')
         
-        current_input_index = len(provided_inputs)
-        current_prompt = new_prompts[current_input_index] if current_input_index < len(new_prompts) else 'Enter value'
+        provided_inputs = session.get('provided_inputs', [])
+        all_prompts = session.get('all_prompts', [])
         
+        provided_inputs.append(current_value)
+        
+        output, error, needs_input, new_prompts = execute_user_code(user_code_path, provided_inputs)
+        
+        if needs_input:
+            session['provided_inputs'] = provided_inputs
+            session['all_prompts'] = new_prompts
+            
+            previous_inputs_display = list(zip(all_prompts[:len(provided_inputs)], provided_inputs))
+            
+            current_input_index = len(provided_inputs)
+            current_prompt = new_prompts[current_input_index] if current_input_index < len(new_prompts) else 'Enter value'
+            
+            return render_template_string(
+                HTML_TEMPLATE,
+                filename='main.py',
+                timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                output=output,
+                error=error,
+                status_class='waiting',
+                status_text='WAITING FOR INPUT',
+                needs_input=True,
+                current_prompt=current_prompt,
+                previous_inputs=previous_inputs_display,
+                last_value=''
+            )
+        else:
+            session['final_output'] = output
+            session['final_error'] = error
+            session['execution_complete'] = True
+            
+            return redirect(url_for('show_result'))
+    except Exception as e:
+        # Catch any server errors and display them
+        import traceback
+        error_msg = f"Server Error: {type(e).__name__}: {str(e)}\n\n{traceback.format_exc()}"
         return render_template_string(
             HTML_TEMPLATE,
             filename='main.py',
             timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            output=output,
-            error=error,
-            status_class='waiting',
-            status_text='WAITING FOR INPUT',
-            needs_input=True,
-            current_prompt=current_prompt,
-            previous_inputs=previous_inputs_display,
+            output='',
+            error=error_msg,
+            status_class='error',
+            status_text='SERVER ERROR',
+            needs_input=False,
+            current_prompt='',
+            previous_inputs=[],
             last_value=''
         )
-    else:
-        session['final_output'] = output
-        session['final_error'] = error
-        session['execution_complete'] = True
-        
-        return redirect(url_for('show_result'))
 
 
 @app.route('/result')
