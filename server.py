@@ -364,7 +364,16 @@ def execute_user_code(file_path, provided_inputs=None):
     old_input = builtins.input
     builtins.input = input_capture.mock_input
     
+    # Add the directory of the user code to sys.path for imports
+    file_dir = str(Path(file_path).parent.absolute())
+    sys_path_modified = False
+    
     try:
+        # Add directory to sys.path if not already there
+        if file_dir not in sys.path:
+            sys.path.insert(0, file_dir)
+            sys_path_modified = True
+        
         spec = importlib.util.spec_from_file_location("user_code", file_path)
         if spec and spec.loader:
             module = importlib.util.module_from_spec(spec)
@@ -384,6 +393,10 @@ def execute_user_code(file_path, provided_inputs=None):
     finally:
         sys.stdout = old_stdout
         builtins.input = old_input
+        
+        # Clean up sys.path
+        if sys_path_modified and file_dir in sys.path:
+            sys.path.remove(file_dir)
     
     return output.getvalue(), error, needs_input, input_prompts
 
