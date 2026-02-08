@@ -15,12 +15,36 @@ import io
 import importlib.util
 from pathlib import Path
 from flask import Flask, render_template_string, request, redirect, url_for, session
+from flask_session import Session
 from datetime import datetime
 import secrets
 from waitress import serve
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
+
+# Configure server-side session storage to avoid cookie size limits
+# Create a dedicated sessions directory in the project
+SESSION_DIR = Path(__file__).parent / '.sessions'
+SESSION_DIR.mkdir(exist_ok=True)
+
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = str(SESSION_DIR)
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+Session(app)
+
+# {% if previous_inputs %}
+#             <div class="previous-inputs">
+#                 <h4>✅ Previously entered:</h4>
+#                 {% for prev_prompt, prev_value in previous_inputs %}
+#                 <div class="previous-input-item">
+#                     <span class="previous-input-label">{{ prev_prompt if prev_prompt else 'Input' }}:</span>
+#                     <span class="previous-input-value">{{ prev_value }}</span>
+#                 </div>
+#                 {% endfor %}
+#             </div>
+#             {% endif %}
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -267,19 +291,6 @@ HTML_TEMPLATE = """
         {% if needs_input %}
         <form method="POST" action="/submit" class="input-section">
             <h3>📝 Input Required</h3>
-            
-            {% if previous_inputs %}
-            <div class="previous-inputs">
-                <h4>✅ Previously entered:</h4>
-                {% for prev_prompt, prev_value in previous_inputs %}
-                <div class="previous-input-item">
-                    <span class="previous-input-label">{{ prev_prompt if prev_prompt else 'Input' }}:</span>
-                    <span class="previous-input-value">{{ prev_value }}</span>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            
             <div class="input-group">
                 <label for="current_input">{{ current_prompt if current_prompt else 'Enter value' }}</label>
                 <div class="input-row">
@@ -398,7 +409,13 @@ def execute_user_code(file_path, provided_inputs=None):
         if sys_path_modified and file_dir in sys.path:
             sys.path.remove(file_dir)
     
-    return output.getvalue(), error, needs_input, input_prompts
+    # Reverse output lines for descending time order (most recent first)
+    output_text = output.getvalue()
+    if output_text:
+        lines = output_text.splitlines()
+        output_text = '\n'.join(reversed(lines))
+    
+    return output_text, error, needs_input, input_prompts
 
 
 @app.route('/', methods=['GET'])

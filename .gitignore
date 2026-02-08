@@ -135,3 +135,6 @@ Thumbs.db
 
 # User code (for testing)
 main.py
+
+# Flask sessions
+.sessions/
